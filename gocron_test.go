@@ -2,9 +2,10 @@
 package gocron
 
 import (
+	"fmt"
+	"github.com/chacken/gocron"
 	"testing"
 	"time"
-	"fmt"
 )
 
 var err = 1
@@ -18,8 +19,9 @@ func taskWithParams(a int, b string) {
 }
 
 func TestSecond(*testing.T) {
-	defaultScheduler.Every(1).Second().Do(task)
-	defaultScheduler.Every(1).Second().Do(taskWithParams, 1, "hello")
-	defaultScheduler.Start()
+	s := gocron.NewScheduler()
+	s.Job("123").Every(1).Second().Do(task)
+	s.Job("234").Every(1).Second().Do(taskWithParams, 1, "hello")
+	s.Start()
 	time.Sleep(10 * time.Second)
 }
