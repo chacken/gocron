@@ -67,9 +67,10 @@ type Job struct {
 }
 
 // Create a new job with the time interval.
-func NewJob(intervel uint64) *Job {
+func NewJob(id string) *Job {
 	return &Job{
-		intervel,
+		id,
+		0,
 		"", "", "",
 		time.Unix(0, 0),
 		time.Unix(0, 0), 0,
@@ -109,7 +110,7 @@ func getFunctionName(fn interface{}) string {
 
 // Specifies the jobFunc that should be called every time the job runs
 //
-func (j *Job) Do(jobFun interface{}, params ...interface{}) {
+func (j *Job) Do(jobFun interface{}, jobId string, params ...interface{}) {
 	typ := reflect.TypeOf(jobFun)
 	if typ.Kind() != reflect.Func {
 		panic("only function can be schedule into the job queue.")
@@ -347,7 +348,7 @@ func (j *Job) Weeks() *Job {
 // Class Scheduler, the only data member is the list of jobs.
 type Scheduler struct {
 	// Array store jobs
-	jobs [MAXJOBNUM]*Job
+	jobs map[string]*Job
 
 	// Size of jobs which jobs holding.
 	size int
@@ -359,35 +360,32 @@ func (s *Scheduler) Len() int {
 	return s.size
 }
 
-func (s *Scheduler) Swap(i, j int) {
-	s.jobs[i], s.jobs[j] = s.jobs[j], s.jobs[i]
-}
+//func (s *Scheduler) Swap(i, j int) {
+//	s.jobs[i], s.jobs[j] = s.jobs[j], s.jobs[i]
+//}
 
-func (s *Scheduler) Less(i, j int) bool {
-	return s.jobs[j].nextRun.After(s.jobs[i].nextRun)
-}
+//func (s *Scheduler) Less(i, j int) bool {
+//	return s.jobs[j].nextRun.After(s.jobs[i].nextRun)
+//}
 
 // Create a new scheduler
 func NewScheduler() *Scheduler {
-	return &Scheduler{[MAXJOBNUM]*Job{}, 0}
+	return &Scheduler{make(map[string]*Job{}), 0}
 }
 
 // Get the current runnable jobs, which shouldRun is True
-func (s *Scheduler) getRunnableJobs() (running_jobs [MAXJOBNUM]*Job, n int) {
-	runnableJobs := [MAXJOBNUM]*Job{}
-	n = 0
+func (s *Scheduler) getRunnableJobs() (runnable_jobs map[string]*Job) {
+	runnableJobs := make([string]*Job{})
 	sort.Sort(s)
-	for i := 0; i < s.size; i++ {
-		if s.jobs[i].shouldRun() {
-
-			runnableJobs[n] = s.jobs[i]
+	for _, job := range s.jobs {
+		if job.shouldRun() {
+			runnableJobs[job.id] = job
 			//fmt.Println(runnableJobs)
-			n++
 		} else {
 			break
 		}
 	}
-	return runnableJobs, n
+	return runnableJobs
 }
 
 // Datetime when the next job should run.
@@ -400,60 +398,52 @@ func (s *Scheduler) NextRun() (*Job, time.Time) {
 }
 
 // Schedule a new periodic job
-func (s *Scheduler) Every(interval uint64) *Job {
-	job := NewJob(interval)
-	s.jobs[s.size] = job
+func (s *Scheduler) Job(id string) *Job {
+	job := NewJob(id)
+	s.jobs[id] = job
 	s.size++
 	return job
 }
 
+// Set job interval
+func (j *Job) Every(interval uint64) *Job {
+	j.interval = interval
+	return j
+}
+
 // Run all the jobs that are scheduled to run.
 func (s *Scheduler) RunPending() {
-	runnableJobs, n := s.getRunnableJobs()
-
-	if n != 0 {
-		for i := 0; i < n; i++ {
-			runnableJobs[i].run()
-		}
+	runnableJobs := s.getRunnableJobs()
+	for _, j := range runableJobs {
+		j.run()
 	}
+
 }
 
 // Run all jobs regardless if they are scheduled to run or not
 func (s *Scheduler) RunAll() {
-	for i := 0; i < s.size; i++ {
-		s.jobs[i].run()
+	for _, j := range s.jobs {
+		j.run()
 	}
 }
 
 // Run all jobs with delay seconds
 func (s *Scheduler) RunAllwithDelay(d int) {
-	for i := 0; i < s.size; i++ {
-		s.jobs[i].run()
+	for _, j := range s.jobs {
+		j.run()
 		time.Sleep(time.Duration(d))
 	}
 }
 
 // Remove specific job j
-func (s *Scheduler) Remove(j interface{}) {
-	i := 0
-	for ; i < s.size; i++ {
-		if s.jobs[i].jobFunc == getFunctionName(j) {
-			break
-		}
-	}
-
-	for j := (i + 1); j < s.size; j++ {
-		s.jobs[i] = s.jobs[j]
-		i++
-	}
+func (s *Scheduler) Remove(id string) {
+	delete(s.jobs, id)
 	s.size = s.size - 1
 }
 
 // Delete all scheduled jobs
 func (s *Scheduler) Clear() {
-	for i := 0; i < s.size; i++ {
-		s.jobs[i] = nil
-	}
+	s.jobs = make(map[string]interface{})
 	s.size = 0
 }
 
