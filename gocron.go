@@ -20,6 +20,7 @@ package gocron
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"runtime"
 	"sort"
@@ -377,18 +378,19 @@ func NewScheduler() *Scheduler {
 }
 
 // Get the current runnable jobs, which shouldRun is True
-func (s *Scheduler) getRunnableJobs() (runnable_jobs map[string]*Job) {
-	runnableJobs := map[string]*Job{}
+func (s *Scheduler) getRunnableJobs() (runnable_jobs []*Job, n int) {
+	runnableJobs := []*Job{}
+	n = 0
 	sort.Sort(s)
-	for _, job := range s.jobs {
-		if job.shouldRun() {
-			runnableJobs[job.id] = job
-			//fmt.Println(runnableJobs)
+	for i := 0; i < s.size; i++ {
+		if s.jobs[s.keys[i]].shouldRun() {
+			runnableJobs = append(runnableJobs, s.jobs[s.keys[i]])
+			n++
 		} else {
 			break
 		}
 	}
-	return runnableJobs
+	return runnableJobs, n
 }
 
 // Datetime when the next job should run.
@@ -417,11 +419,13 @@ func (j *Job) Every(interval uint64) *Job {
 
 // Run all the jobs that are scheduled to run.
 func (s *Scheduler) RunPending() {
-	runnableJobs := s.getRunnableJobs()
-	for _, j := range runnableJobs {
-		j.run()
-	}
+	runnableJobs, n := s.getRunnableJobs()
 
+	if n != 0 {
+		for i := 0; i < n; i++ {
+			runnableJobs[i].run()
+		}
+	}
 }
 
 // Run all jobs regardless if they are scheduled to run or not
