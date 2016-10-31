@@ -20,7 +20,6 @@ package gocron
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"runtime"
 	"sort"
