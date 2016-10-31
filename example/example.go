@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/jasonlvhit/gocron"
+	"github.com/chacken/gocron"
 )
 
 func task() {
@@ -15,40 +15,37 @@ func taskWithParams(a int, b string) {
 }
 
 func main() {
+
+	s := gocron.NewScheduler()
+
 	// Do jobs with params
-	gocron.Every(1).Second().Do(taskWithParams, 1, "hello")
+	s.Job("123").Every(1).Second().Do(taskWithParams, 1, "hello")
 
 	// Do jobs without params
-	gocron.Every(1).Second().Do(task)
-	gocron.Every(2).Seconds().Do(task)
-	gocron.Every(1).Minute().Do(task)
-	gocron.Every(2).Minutes().Do(task)
-	gocron.Every(1).Hour().Do(task)
-	gocron.Every(2).Hours().Do(task)
-	gocron.Every(1).Day().Do(task)
-	gocron.Every(2).Days().Do(task)
+	s.Job("abc").Every(1).Second().Do(task)
+	s.Job("def").Every(2).Seconds().Do(task)
+	s.Job("ghi").Every(1).Minute().Do(task)
+	s.Job("jkl").Every(2).Minutes().Do(task)
+	s.Job("mno").Every(1).Hour().Do(task)
+	s.Job("pqr").Every(2).Hours().Do(task)
+	s.Job("stu").Every(1).Day().Do(task)
+	s.Job("vwx").Every(2).Days().Do(task)
 
 	// Do jobs on specific weekday
-	gocron.Every(1).Monday().Do(task)
-	gocron.Every(1).Thursday().Do(task)
+	s.Job("yz").Every(1).Monday().Do(task)
+	s.Job("123").Every(1).Thursday().Do(task)
 
 	// function At() take a string like 'hour:min'
-	gocron.Every(1).Day().At("10:30").Do(task)
-	gocron.Every(1).Monday().At("18:30").Do(task)
+	s.Job("456").Every(1).Day().At("10:30").Do(task)
+	s.Job("789").Every(1).Monday().At("18:30").Do(task)
 
 	// remove, clear and next_run
-	_, time := gocron.NextRun()
+	_, time := s.NextRun()
 	fmt.Println(time)
 
 	// gocron.Remove(task)
 	// gocron.Clear()
 
 	// function Start start all the pending jobs
-	<-gocron.Start()
-
-	// also , you can create a your new scheduler,
-	// to run two scheduler concurrently
-	s := gocron.NewScheduler()
-	s.Every(3).Seconds().Do(task)
 	<-s.Start()
 }
