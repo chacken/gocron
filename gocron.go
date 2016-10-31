@@ -20,6 +20,7 @@ package gocron
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"runtime"
 	"sort"
@@ -431,14 +432,14 @@ func (s *Scheduler) RunAllwithDelay(d int) {
 
 // Remove specific job j
 func (s *Scheduler) Remove(id string) {
-	delete(s.jobs, id)
 	for i, v := range s.keys {
 		if v == id {
-			s.keys = append(s.keys[:i], s.keys[i:]...)
+			delete(s.jobs, id)
+			s.keys = append(s.keys[:i], s.keys[i+1:]...)
+			s.size = s.size - 1
+			break
 		}
-		break
 	}
-	s.size = s.size - 1
 }
 
 // Delete all scheduled jobs
