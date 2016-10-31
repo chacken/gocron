@@ -55,7 +55,7 @@ func main() {
 	_, time := gocron.NextRun()
 	fmt.Println(time)
 
-	s.Remove(task)
+	s.Remove("abc")
 	s.Clear()
 
 	// function Start start all the pending jobs
