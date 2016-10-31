@@ -198,11 +198,7 @@ func (j *Job) scheduleNextRun() {
 
 // the follow functions set the job's unit with seconds,minutes,hours...
 
-// Set the unit with second
 func (j *Job) Second() (job *Job) {
-	if j.interval != 1 {
-		panic("")
-	}
 	job = j.Seconds()
 	return
 }
@@ -215,9 +211,6 @@ func (j *Job) Seconds() (job *Job) {
 
 // Set the unit  with minute, which interval is 1
 func (j *Job) Minute() (job *Job) {
-	if j.interval != 1 {
-		panic("")
-	}
 	job = j.Minutes()
 	return
 }
@@ -230,9 +223,6 @@ func (j *Job) Minutes() (job *Job) {
 
 //set the unit with hour, which interval is 1
 func (j *Job) Hour() (job *Job) {
-	if j.interval != 1 {
-		panic("")
-	}
 	job = j.Hours()
 	return
 }
@@ -245,9 +235,6 @@ func (j *Job) Hours() (job *Job) {
 
 // Set the job's unit with day, which interval is 1
 func (j *Job) Day() (job *Job) {
-	if j.interval != 1 {
-		panic("")
-	}
 	job = j.Days()
 	return
 }
@@ -465,7 +452,7 @@ func (s *Scheduler) Clear() {
 // Add seconds ticker
 func (s *Scheduler) Start() chan bool {
 	stopped := make(chan bool, 1)
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(500 * time.Millisecond)
 
 	go func() {
 		for {
